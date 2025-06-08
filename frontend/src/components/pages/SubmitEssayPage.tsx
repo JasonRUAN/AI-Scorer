@@ -96,7 +96,8 @@ export default function SubmitEssayPage() {
             try {
                 // 调用AI评分的API
                 const response = await fetch(
-                    `${CONSTANTS.BACKEND_URL}/deepseek/get_ai_score`,
+                    // `${CONSTANTS.BACKEND_URL}/deepseek/get_ai_score`,
+                    `${CONSTANTS.BACKEND_URL}/deepseek/get_ai_suggestion`,
                     {
                         method: "POST",
                         headers: {
