@@ -122,13 +122,18 @@ contract AIScorer is Ownable {
     function submitEssay(
         uint256 _contestId,
         string memory _title,
-        string memory _contentHash
+        string memory _contentHash,
+        // 当前简化版本：分数和评价由用户自己提交，未来会使用后端服务调用scoreEssay去打分
+        uint256 _score,
+        string memory _feedback
     ) external contestExists(_contestId) {
         Contest storage contest = contests[_contestId];
         require(block.timestamp >= contest.startTime, "Contest has not started");
         require(block.timestamp <= contest.endTime, "Contest submission period has ended");
         require(bytes(_title).length > 0, "Title cannot be empty");
         require(bytes(_contentHash).length > 0, "Content hash cannot be empty");
+
+        require(_score <= 60, "Score must be between 0 and 60");
 
         // 检查用户是否已经在此比赛中提交过文章
         uint256[] memory userEssayIds = userProfiles[msg.sender].essayIds;
@@ -146,7 +151,12 @@ contract AIScorer is Ownable {
         essay.contentHash = _contentHash;
         essay.submittedAt = block.timestamp;
         essay.aiScore = 0;
-        essay.status = EssayStatus.Submitted;
+        // essay.status = EssayStatus.Submitted;
+
+        // 当前简化版本：分数和评价由用户自己提交，未来会使用后端服务调用scoreEssay去打分
+        essay.aiScore = _score;
+        essay.feedback = _feedback;
+        essay.status = EssayStatus.Graded;
 
         // 更新比赛参与者信息
         if (userProfiles[msg.sender].submissionsCount == 0) {
