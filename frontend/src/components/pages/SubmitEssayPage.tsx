@@ -172,9 +172,12 @@ export default function SubmitEssayPage() {
                                                                     variant="outline"
                                                                     className="ml-2"
                                                                 >
-                                                                    {
+                                                                    {Number(
                                                                         contest.reward
-                                                                    }
+                                                                    ) /
+                                                                        10 **
+                                                                            18}{" "}
+                                                                    MON
                                                                 </Badge>
                                                             </div>
                                                         </SelectItem>
@@ -226,9 +229,11 @@ export default function SubmitEssayPage() {
                                                     <Badge variant="secondary">
                                                         <Award className="w-3 h-3 mr-1" />
                                                         奖励{" "}
-                                                        {
+                                                        {Number(
                                                             selectedContestData.reward
-                                                        }
+                                                        ) /
+                                                            10 ** 18}{" "}
+                                                        MON
                                                     </Badge>
                                                     <Badge variant="secondary">
                                                         <Clock className="w-3 h-3 mr-1" />
@@ -460,7 +465,11 @@ export default function SubmitEssayPage() {
                                                     奖励金额
                                                 </span>
                                                 <span className="font-medium text-orange-600">
-                                                    {selectedContestData.reward}
+                                                    {Number(
+                                                        selectedContestData.reward
+                                                    ) /
+                                                        10 ** 18}{" "}
+                                                    MON
                                                 </span>
                                             </div>
                                             <div className="flex justify-between">
