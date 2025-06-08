@@ -42,13 +42,13 @@ export default function HomePage() {
     const stats = [
         {
             label: "活跃用户",
-            value: "1,234",
+            value: "XXX",
             icon: Users,
             color: "from-blue-500 to-cyan-500",
         },
         {
             label: "已评分作文",
-            value: "5,678",
+            value: "XXX",
             icon: Brain,
             color: "from-purple-500 to-pink-500",
         },
@@ -60,7 +60,7 @@ export default function HomePage() {
         },
         {
             label: "奖励发放",
-            value: "245 MON",
+            value: "XXX MON",
             icon: Award,
             color: "from-orange-500 to-red-500",
         },
