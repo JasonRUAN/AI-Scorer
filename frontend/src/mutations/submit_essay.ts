@@ -6,6 +6,8 @@ interface EssaySubmission {
     contestId: string;
     title: string;
     contentHash: string;
+    _score: number;
+    _feedback: string;
 }
 
 export interface Essay {
@@ -44,6 +46,8 @@ export function useSubmitEssay() {
                     contestIdNumber,
                     submission.title,
                     submission.contentHash,
+                    submission._score,
+                    submission._feedback,
                 ],
             });
 

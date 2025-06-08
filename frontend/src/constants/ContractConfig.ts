@@ -1,5 +1,5 @@
 export const aiScorerContractConfig = {
-    address: "0xE9E547143542DD845D059B95927dD515228b23B8",
+    address: "0x383bedCBA3f9BdDB7C5c8f4CE0346AE4e0bB9923",
     abi: [
         { type: "constructor", inputs: [], stateMutability: "nonpayable" },
         {
@@ -457,6 +457,8 @@ export const aiScorerContractConfig = {
                     type: "string",
                     internalType: "string",
                 },
+                { name: "_score", type: "uint256", internalType: "uint256" },
+                { name: "_feedback", type: "string", internalType: "string" },
             ],
             outputs: [],
             stateMutability: "nonpayable",

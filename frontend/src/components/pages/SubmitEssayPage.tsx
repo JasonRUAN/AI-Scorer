@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -35,9 +36,11 @@ import {
     Brain,
     Sparkles,
 } from "lucide-react";
-import { mockContests, mockAIScore } from "@/lib/mock-data";
+import { mockContests } from "@/lib/mock-data";
 import { getContestStatus } from "@/lib/contest-utils";
 import { useGetAllContests } from "@/hooks/useGetAllContests";
+import { useSubmitEssay } from "@/mutations/submit_essay";
+import { CONSTANTS } from "@/constants";
 
 export default function SubmitEssayPage() {
     const [selectedContest, setSelectedContest] = useState("");
@@ -52,6 +55,9 @@ export default function SubmitEssayPage() {
 
     // 获取真实比赛数据
     const { data: contests = [] } = useGetAllContests();
+
+    // 使用区块链提交hook
+    const submitEssayMutation = useSubmitEssay();
 
     // 如果没有真实数据，使用模拟数据作为后备
     const contestsToUse = contests.length > 0 ? contests : mockContests;
@@ -84,18 +90,97 @@ export default function SubmitEssayPage() {
         setIsSubmitting(true);
 
         try {
-            // Mock submission
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-
-            toast.success("作文提交成功！");
-
             // Start AI grading
             setIsGrading(true);
-            const result = await mockAIScore(essayContent);
-            setAiResult(result);
-            setIsGrading(false);
 
-            toast.success(`AI评分完成！得分：${result.score}分`);
+            try {
+                // 调用AI评分的API
+                const response = await fetch(
+                    `${CONSTANTS.BACKEND_URL}/deepseek/get_ai_score`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            content: essayContent,
+                        }),
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // 解析评分 - 从message中提取"总分：XX / 100 分"中的XX
+                let score = 0;
+                const scoreMatch = result.message.match(
+                    /总分：(\d+)\s*\/\s*100\s*分/
+                );
+                if (scoreMatch) {
+                    score = parseInt(scoreMatch[1], 10);
+                }
+
+                setAiResult({
+                    score: score,
+                    feedback: result.message,
+                });
+
+                setIsGrading(false); // AI评分完成，立即更新状态
+                toast.success(`AI评分完成！得分：${score}分`);
+
+                // 稍微延迟一下，让用户看到评分结果
+                await new Promise((resolve) => setTimeout(resolve, 100));
+
+                // AI评分完成后，提交到区块链
+                try {
+                    // 当前文档内容，直接存链上，未来考虑存链下，链上存Hash
+                    const contentHash = essayContent;
+
+                    await submitEssayMutation.mutateAsync({
+                        contestId: selectedContest,
+                        title: essayTitle,
+                        contentHash: contentHash,
+                        _score: score,
+                        _feedback: result.message,
+                    });
+
+                    toast.success("作文提交成功！已上链保存");
+
+                    // 提交成功后重置表单
+                    setSelectedContest("");
+                    setEssayTitle("");
+                    setEssayContent("");
+                    setAiResult(null);
+                } catch (blockchainError) {
+                    console.error("区块链提交失败:", blockchainError);
+                    // 更友好的错误处理
+                    if (blockchainError instanceof Error) {
+                        if (blockchainError.message.includes("User rejected")) {
+                            toast.error("用户取消了交易");
+                        } else if (
+                            blockchainError.message.includes(
+                                "insufficient funds"
+                            )
+                        ) {
+                            toast.error("余额不足，无法完成交易");
+                        } else {
+                            toast.error(
+                                `区块链提交失败: ${blockchainError.message}`
+                            );
+                        }
+                    } else {
+                        toast.error("区块链提交失败，但AI评分已完成");
+                    }
+                }
+            } catch (error) {
+                console.error("AI评分失败:", error);
+                toast.error("AI评分失败，请重试");
+                setAiResult(null);
+                setIsGrading(false);
+            }
         } catch {
             toast.error("提交失败，请重试");
         } finally {
@@ -320,6 +405,60 @@ export default function SubmitEssayPage() {
                                             </div>
                                         </div>
 
+                                        <div>
+                                            {isGrading && (
+                                                <div className="text-center py-6">
+                                                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-500" />
+                                                    <p className="text-sm text-muted-foreground">
+                                                        AI正在评分中...
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* AI评分状态提示 */}
+                                        {(isGrading || aiResult) && (
+                                            <div
+                                                className={`p-4 rounded-lg border ${
+                                                    isGrading
+                                                        ? "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800"
+                                                        : "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
+                                                }`}
+                                            >
+                                                {isGrading ? (
+                                                    <div className="flex items-center">
+                                                        <Loader2 className="w-5 h-5 animate-spin mr-3 text-blue-500" />
+                                                        <div>
+                                                            <p className="font-medium text-blue-700 dark:text-blue-300">
+                                                                AI正在评分中...
+                                                            </p>
+                                                            <p className="text-sm text-blue-600 dark:text-blue-400">
+                                                                请稍候，AI正在分析您的作文
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    aiResult && (
+                                                        <div className="flex items-center">
+                                                            <CheckCircle className="w-5 h-5 mr-3 text-green-500" />
+                                                            <div>
+                                                                <p className="font-medium text-green-700 dark:text-green-300">
+                                                                    AI评分完成！得分：
+                                                                    {
+                                                                        aiResult.score
+                                                                    }
+                                                                    分
+                                                                </p>
+                                                                <p className="text-sm text-green-600 dark:text-green-400">
+                                                                    详细反馈请查看右侧面板，点击提交按钮完成上链
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                )}
+                                            </div>
+                                        )}
+
                                         <Button
                                             onClick={handleSubmit}
                                             disabled={
@@ -327,7 +466,8 @@ export default function SubmitEssayPage() {
                                                 !essayTitle.trim() ||
                                                 !essayContent.trim() ||
                                                 isSubmitting ||
-                                                isOverLimit
+                                                isOverLimit ||
+                                                submitEssayMutation.isPending
                                             }
                                             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                                             size="lg"
@@ -335,7 +475,13 @@ export default function SubmitEssayPage() {
                                             {isSubmitting ? (
                                                 <>
                                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                    提交中...
+                                                    {isGrading
+                                                        ? "AI评分中..."
+                                                        : submitEssayMutation.isPending
+                                                        ? "等待钱包确认..."
+                                                        : aiResult
+                                                        ? "准备上链提交..."
+                                                        : "提交中..."}
                                                 </>
                                             ) : (
                                                 <>
@@ -389,11 +535,26 @@ export default function SubmitEssayPage() {
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ duration: 0.6 }}
                                 >
-                                    <Card>
+                                    <Card
+                                        className={
+                                            aiResult && !isGrading
+                                                ? "ring-2 ring-blue-500 ring-opacity-50"
+                                                : ""
+                                        }
+                                    >
                                         <CardHeader>
                                             <CardTitle className="flex items-center">
                                                 <Brain className="w-5 h-5 mr-2" />
                                                 AI评分
+                                                {aiResult && !isGrading && (
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="ml-2 bg-green-100 text-green-700"
+                                                    >
+                                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                                        已完成
+                                                    </Badge>
+                                                )}
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent>
@@ -424,11 +585,88 @@ export default function SubmitEssayPage() {
                                                             <p className="text-sm font-medium mb-2">
                                                                 AI反馈：
                                                             </p>
-                                                            <p className="text-sm text-muted-foreground">
-                                                                {
-                                                                    aiResult.feedback
-                                                                }
-                                                            </p>
+                                                            <div className="text-sm text-muted-foreground prose prose-sm max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-ul:text-muted-foreground prose-ol:text-muted-foreground">
+                                                                <ReactMarkdown
+                                                                    components={{
+                                                                        h1: (
+                                                                            props
+                                                                        ) => (
+                                                                            <h1
+                                                                                className="text-lg font-semibold mb-2"
+                                                                                {...props}
+                                                                            />
+                                                                        ),
+                                                                        h2: (
+                                                                            props
+                                                                        ) => (
+                                                                            <h2
+                                                                                className="text-base font-semibold mb-2"
+                                                                                {...props}
+                                                                            />
+                                                                        ),
+                                                                        h3: (
+                                                                            props
+                                                                        ) => (
+                                                                            <h3
+                                                                                className="text-sm font-semibold mb-1"
+                                                                                {...props}
+                                                                            />
+                                                                        ),
+                                                                        p: (
+                                                                            props
+                                                                        ) => (
+                                                                            <p
+                                                                                className="mb-2"
+                                                                                {...props}
+                                                                            />
+                                                                        ),
+                                                                        ul: (
+                                                                            props
+                                                                        ) => (
+                                                                            <ul
+                                                                                className="list-disc list-inside mb-2 space-y-1"
+                                                                                {...props}
+                                                                            />
+                                                                        ),
+                                                                        ol: (
+                                                                            props
+                                                                        ) => (
+                                                                            <ol
+                                                                                className="list-decimal list-inside mb-2 space-y-1"
+                                                                                {...props}
+                                                                            />
+                                                                        ),
+                                                                        li: (
+                                                                            props
+                                                                        ) => (
+                                                                            <li
+                                                                                className="text-sm"
+                                                                                {...props}
+                                                                            />
+                                                                        ),
+                                                                        strong: (
+                                                                            props
+                                                                        ) => (
+                                                                            <strong
+                                                                                className="font-semibold text-foreground"
+                                                                                {...props}
+                                                                            />
+                                                                        ),
+                                                                        em: (
+                                                                            props
+                                                                        ) => (
+                                                                            <em
+                                                                                className="italic"
+                                                                                {...props}
+                                                                            />
+                                                                        ),
+                                                                    }}
+                                                                >
+                                                                    {
+                                                                        aiResult.feedback
+                                                                    }
+                                                                </ReactMarkdown>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 )

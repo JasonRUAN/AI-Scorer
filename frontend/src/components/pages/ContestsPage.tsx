@@ -383,7 +383,7 @@ export default function ContestsPage() {
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="title">比赛标题 *</Label>
+                                    <Label htmlFor="title">作文标题 *</Label>
                                     <Input
                                         id="title"
                                         value={contestForm.title}
@@ -398,7 +398,7 @@ export default function ContestsPage() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="description">
-                                        比赛描述 *
+                                        作文描述 *
                                     </Label>
                                     <Textarea
                                         id="description"
@@ -414,7 +414,7 @@ export default function ContestsPage() {
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="prompt">作文主题 *</Label>
+                                    <Label htmlFor="prompt">作文要求 *</Label>
                                     <Textarea
                                         id="prompt"
                                         value={contestForm.prompt}

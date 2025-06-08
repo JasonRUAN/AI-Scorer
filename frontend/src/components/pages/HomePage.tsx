@@ -273,7 +273,9 @@ export default function HomePage() {
                                                 进行中
                                             </Badge>
                                             <Badge variant="outline">
-                                                {contest.reward}
+                                                {Number(contest.reward) /
+                                                    10 ** 18}{" "}
+                                                MON
                                             </Badge>
                                         </div>
                                         <CardTitle className="text-xl leading-tight">
