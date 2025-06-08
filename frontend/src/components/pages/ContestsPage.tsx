@@ -44,16 +44,21 @@ import {
     Award,
     CheckCircle,
     AlertCircle,
+    Loader2,
 } from "lucide-react";
 import { mockContests } from "@/lib/mock-data";
 import { Contest } from "@/types";
 import { toast } from "sonner";
+import { useCreateContest } from "@/mutations/create_contest";
 
 export default function ContestsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState("deadline");
     const [filterStatus, setFilterStatus] = useState("all");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+    // 创建比赛的 mutation
+    const createContestMutation = useCreateContest();
 
     // 创建比赛表单状态
     const [contestForm, setContestForm] = useState({
@@ -62,36 +67,84 @@ export default function ContestsPage() {
         prompt: "",
         maxWords: "",
         reward: "",
+        startTime: "",
+        endTime: "",
         deadline: "",
     });
 
-    const handleCreateContest = () => {
-        // 验证表单
-        if (
-            !contestForm.title ||
-            !contestForm.description ||
-            !contestForm.prompt ||
-            !contestForm.maxWords ||
-            !contestForm.reward ||
-            !contestForm.deadline
-        ) {
-            toast.error("请填写所有必填字段");
-            return;
+    const handleCreateContest = async () => {
+        try {
+            // 验证表单
+            if (
+                !contestForm.title ||
+                !contestForm.description ||
+                !contestForm.prompt ||
+                !contestForm.maxWords ||
+                !contestForm.reward ||
+                !contestForm.startTime ||
+                !contestForm.endTime ||
+                !contestForm.deadline
+            ) {
+                toast.error("请填写所有必填字段");
+                return;
+            }
+
+            // 验证时间逻辑
+            const startTime = new Date(contestForm.startTime).getTime();
+            const endTime = new Date(contestForm.endTime).getTime();
+            const deadline = new Date(contestForm.deadline).getTime();
+
+            if (startTime >= endTime) {
+                toast.error("比赛开始时间必须早于结束时间");
+                return;
+            }
+
+            if (endTime > deadline) {
+                toast.error("比赛结束时间不能晚于截止时间");
+                return;
+            }
+
+            console.log(startTime, Date.now());
+
+            if (startTime <= Date.now()) {
+                toast.error("比赛开始时间必须晚于当前时间");
+                return;
+            }
+
+            // 准备创建比赛的数据
+            const contestInfo = {
+                title: contestForm.title,
+                description: contestForm.description,
+                prompt: contestForm.prompt,
+                startTime: Math.floor(startTime / 1000), // 转换为秒时间戳
+                endTime: Math.floor(endTime / 1000), // 转换为秒时间戳
+                deadline: Math.floor(deadline / 1000), // 转换为秒时间戳
+                maxWords: parseInt(contestForm.maxWords),
+                reward: parseFloat(contestForm.reward), // 以 ETH 为单位
+            };
+
+            // 调用创建比赛的 mutation
+            await createContestMutation.mutateAsync(contestInfo);
+
+            toast.success("比赛创建成功！");
+            setIsCreateDialogOpen(false);
+
+            // 重置表单
+            setContestForm({
+                title: "",
+                description: "",
+                prompt: "",
+                maxWords: "",
+                reward: "",
+                startTime: "",
+                endTime: "",
+                deadline: "",
+            });
+        } catch (error: unknown) {
+            const errorMessage =
+                error instanceof Error ? error.message : "创建比赛失败，请重试";
+            toast.error(errorMessage);
         }
-
-        // 这里可以添加实际的创建比赛逻辑
-        toast.success("比赛创建成功！");
-        setIsCreateDialogOpen(false);
-
-        // 重置表单
-        setContestForm({
-            title: "",
-            description: "",
-            prompt: "",
-            maxWords: "",
-            reward: "",
-            deadline: "",
-        });
     };
 
     const filteredContests = mockContests.filter((contest) => {
@@ -244,6 +297,36 @@ export default function ContestsPage() {
                                         className="min-h-[100px]"
                                     />
                                 </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="startTime">
+                                        开始时间 *
+                                    </Label>
+                                    <Input
+                                        id="startTime"
+                                        type="datetime-local"
+                                        value={contestForm.startTime}
+                                        onChange={(e) =>
+                                            setContestForm({
+                                                ...contestForm,
+                                                startTime: e.target.value,
+                                            })
+                                        }
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="endTime">结束时间 *</Label>
+                                    <Input
+                                        id="endTime"
+                                        type="datetime-local"
+                                        value={contestForm.endTime}
+                                        onChange={(e) =>
+                                            setContestForm({
+                                                ...contestForm,
+                                                endTime: e.target.value,
+                                            })
+                                        }
+                                    />
+                                </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="maxWords">
@@ -264,10 +347,12 @@ export default function ContestsPage() {
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="reward">
-                                            奖励金额 *
+                                            奖励金额 (MON) *
                                         </Label>
                                         <Input
                                             id="reward"
+                                            type="number"
+                                            step="0.01"
                                             value={contestForm.reward}
                                             onChange={(e) =>
                                                 setContestForm({
@@ -275,7 +360,7 @@ export default function ContestsPage() {
                                                     reward: e.target.value,
                                                 })
                                             }
-                                            placeholder="100 MON"
+                                            placeholder="1.0"
                                         />
                                     </div>
                                 </div>
@@ -298,11 +383,22 @@ export default function ContestsPage() {
                                 <Button
                                     variant="outline"
                                     onClick={() => setIsCreateDialogOpen(false)}
+                                    disabled={createContestMutation.isPending}
                                 >
                                     取消
                                 </Button>
-                                <Button onClick={handleCreateContest}>
-                                    创建比赛
+                                <Button
+                                    onClick={handleCreateContest}
+                                    disabled={createContestMutation.isPending}
+                                >
+                                    {createContestMutation.isPending ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            创建中...
+                                        </>
+                                    ) : (
+                                        "创建比赛"
+                                    )}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
