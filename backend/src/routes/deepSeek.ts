@@ -3,7 +3,7 @@ import fetchDeepSeekCompletion from '../utils/ai/deepSeek';
 
 const router: Router = Router();
 
-router.post('/get_ai_suggestion', async (req, res) => {
+router.post('/get_ai_score', async (req, res) => {
     try {
         const { content } = req.body;
         if (!content) {
