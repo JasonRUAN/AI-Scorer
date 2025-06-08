@@ -360,7 +360,9 @@ contract AIScorerTest is Test {
     function test_EndContestFailures() public {
         _createContestAndSubmitEssay();
 
-        uint256 deadline = block.timestamp + 3 hours;
+        // 获取实际的比赛信息来获取正确的截止时间
+        AIScorer.Contest memory contest = aiScorer.getContest(1);
+        uint256 deadline = contest.deadline;
 
         // 测试截止时间未到
         vm.expectRevert("Contest deadline has not passed");
@@ -492,27 +494,6 @@ contract AIScorerTest is Test {
         uint256[] memory activeContests = aiScorer.getActiveContests();
         assertEq(activeContests.length, 1);
         assertEq(activeContests[0], 2); // 第二个比赛
-    }
-
-    function test_Withdraw() public {
-        uint256 contractBalance = address(aiScorer).balance;
-        uint256 withdrawAmount = 1 ether;
-        uint256 initialOwnerBalance = owner.balance;
-        
-        // 提取资金
-        aiScorer.withdraw(withdrawAmount);
-        
-        // 验证余额变化
-        assertEq(address(aiScorer).balance, contractBalance - withdrawAmount);
-        assertEq(owner.balance, initialOwnerBalance + withdrawAmount);
-    }
-
-    function test_WithdrawFailure() public {
-        uint256 contractBalance = address(aiScorer).balance;
-        
-        // 尝试提取超过余额的金额
-        vm.expectRevert("Insufficient balance");
-        aiScorer.withdraw(contractBalance + 1 ether);
     }
 
     // 辅助函数：创建比赛并提交文章

@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
-
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-contract AIScorer is Ownable, ReentrancyGuard {
+pragma solidity ^0.8.19;
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+contract AIScorer is Ownable {
     // 事件定义
     event ContestCreated(uint256 indexed contestId, string title, uint256 endTime, uint256 reward);
     event EssaySubmitted(uint256 indexed contestId, uint256 indexed essayId, address indexed author);
@@ -86,7 +82,7 @@ contract AIScorer is Ownable, ReentrancyGuard {
 
     constructor() Ownable(msg.sender) {}
 
-    // 管理员功能：创建比赛
+    // 创建比赛功能 - 任何人都可以创建
     function createContest(
         string memory _title,
         string memory _description,
@@ -96,7 +92,7 @@ contract AIScorer is Ownable, ReentrancyGuard {
         uint256 _deadline,
         uint256 _maxWords,
         uint256 _reward
-    ) external onlyOwner {
+    ) external {
         require(_startTime > block.timestamp, "Start time must be in the future");
         require(_endTime > _startTime, "End time must be after start time");
         require(_deadline >= _endTime, "Deadline must be after end time");
@@ -349,14 +345,5 @@ contract AIScorer is Ownable, ReentrancyGuard {
         }
         
         return (authors, scores, essayTitles);
-    }
-
-    // 接受以太币存款用于奖励
-    receive() external payable {}
-
-    // 管理员提取资金
-    function withdraw(uint256 _amount) external onlyOwner {
-        require(_amount <= address(this).balance, "Insufficient balance");
-        payable(owner()).transfer(_amount);
     }
 }
