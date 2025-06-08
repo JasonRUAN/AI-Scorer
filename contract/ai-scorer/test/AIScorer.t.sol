@@ -51,15 +51,14 @@ contract AIScorerTest is Test {
         emit ContestCreated(1, "Test Contest", endTime, reward);
 
         // 创建比赛
-        aiScorer.createContest(
+        aiScorer.createContest{value: reward}(
             "Test Contest",
             "A test contest description",
             "Write about technology",
             startTime,
             endTime,
             deadline,
-            1000,
-            reward
+            1000
         );
 
         // 验证比赛信息
@@ -83,54 +82,50 @@ contract AIScorerTest is Test {
         
         // 测试开始时间在过去
         vm.expectRevert("Start time must be in the future");
-        aiScorer.createContest(
+        aiScorer.createContest{value: 1 ether}(
             "Test Contest",
             "Description",
             "Prompt",
             currentTime - 1,
             currentTime + 1 days,
             currentTime + 2 days,
-            1000,
-            1 ether
+            1000
         );
 
         // 测试结束时间早于开始时间
         vm.expectRevert("End time must be after start time");
-        aiScorer.createContest(
+        aiScorer.createContest{value: 1 ether}(
             "Test Contest",
             "Description", 
             "Prompt",
             currentTime + 1 hours,
             currentTime + 30 minutes,
             currentTime + 2 hours,
-            1000,
-            1 ether
+            1000
         );
 
         // 测试截止时间早于结束时间
         vm.expectRevert("Deadline must be after end time");
-        aiScorer.createContest(
+        aiScorer.createContest{value: 1 ether}(
             "Test Contest",
             "Description",
             "Prompt", 
             currentTime + 1 hours,
             currentTime + 2 hours,
             currentTime + 90 minutes,
-            1000,
-            1 ether
+            1000
         );
 
         // 测试奖励为0
-        vm.expectRevert("Reward must be greater than 0");
-        aiScorer.createContest(
+        vm.expectRevert("Insufficient payment");
+        aiScorer.createContest{value: 0}(
             "Test Contest",
             "Description",
             "Prompt",
             currentTime + 1 hours,
             currentTime + 2 hours,
             currentTime + 3 hours,
-            1000,
-            0
+            1000
         );
     }
 
@@ -140,15 +135,14 @@ contract AIScorerTest is Test {
         uint256 endTime = startTime + 1 days;
         uint256 deadline = endTime + 1 hours;
         
-        aiScorer.createContest(
+        aiScorer.createContest{value: 1 ether}(
             "Test Contest",
             "Description",
             "Write about AI",
             startTime,
             endTime,
             deadline,
-            1000,
-            1 ether
+            1000
         );
 
         // 时间快进到比赛开始
@@ -193,15 +187,14 @@ contract AIScorerTest is Test {
         uint256 endTime = startTime + 1 days;
         uint256 deadline = endTime + 1 hours;
         
-        aiScorer.createContest(
+        aiScorer.createContest{value: 1 ether}(
             "Test Contest",
             "Description",
             "Write about AI",
             startTime,
             endTime,
             deadline,
-            1000,
-            1 ether
+            1000
         );
 
         // 测试比赛未开始
@@ -291,15 +284,14 @@ contract AIScorerTest is Test {
         uint256 deadline = endTime + 1 hours;
         uint256 reward = 1 ether;
         
-        aiScorer.createContest(
+        aiScorer.createContest{value: reward}(
             "Test Contest",
             "Description",
             "Write about AI",
             startTime,
             endTime,
             deadline,
-            1000,
-            reward
+            1000
         );
 
         // 时间快进到比赛期间
@@ -384,16 +376,15 @@ contract AIScorerTest is Test {
         uint256 startTime = block.timestamp + 1 hours;
         uint256 endTime = startTime + 1 days;
         uint256 deadline = endTime + 1 hours;
-        
-        aiScorer.createContest(
+
+        aiScorer.createContest{value: 1 ether}(
             "Test Contest",
             "Description",
             "Write about AI",
             startTime,
             endTime,
             deadline,
-            1000,
-            1 ether
+            1000
         );
 
         vm.warp(startTime + 1 hours);
@@ -465,27 +456,25 @@ contract AIScorerTest is Test {
         
         // 创建不同状态的比赛
         // 即将开始的比赛
-        aiScorer.createContest(
+        aiScorer.createContest{value: 1 ether}(
             "Upcoming Contest",
             "Description",
             "Prompt",
             currentTime + 2 hours,
             currentTime + 3 hours,
             currentTime + 4 hours,
-            1000,
-            1 ether
+            1000
         );
         
         // 正在进行的比赛
-        aiScorer.createContest(
+        aiScorer.createContest{value: 1 ether}(
             "Active Contest",
             "Description", 
             "Prompt",
             currentTime + 1 hours,
             currentTime + 2 hours,
             currentTime + 3 hours,
-            1000,
-            1 ether
+            1000
         );
 
         // 时间快进到第二个比赛开始
@@ -502,15 +491,14 @@ contract AIScorerTest is Test {
         uint256 endTime = startTime + 1 days;
         uint256 deadline = endTime + 1 hours;
         
-        aiScorer.createContest(
+        aiScorer.createContest{value: 1 ether}(
             "Test Contest",
             "Description",
             "Write about AI",
             startTime,
             endTime,
             deadline,
-            1000,
-            1 ether
+            1000
         );
 
         vm.warp(startTime + 1 hours);
