@@ -11,7 +11,6 @@ import {
     NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import {
-    Wallet,
     Menu,
     X,
     Sparkles,
@@ -25,7 +24,7 @@ import { ConnectKitButton } from "connectkit";
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isWalletConnected, setIsWalletConnected] = useState(false);
+    const [isWalletConnected] = useState(false);
     const [userAddress] = useState("0x1234...abcd");
 
     const navigation = [

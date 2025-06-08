@@ -1,9 +1,5 @@
 export enum QueryKey {
-    GetMyGoalsQueryKey = "GetMyGoalsQueryKey",
-    GetOneGoalQueryKey = "GetOneGoalQueryKey",
-    GetMultipleGoalsQueryKey = "GetMultipleGoalsQueryKey",
-    GetGoalCommentsQueryKey = "GetGoalCommentsQueryKey",
-    GetGoalProgressUpdatesQueryKey = "GetGoalProgressUpdatesQueryKey",
+    GetMultipleContestsQueryKey = "getMultipleContests",
 }
 
 export const CONSTANTS = {

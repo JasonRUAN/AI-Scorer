@@ -15,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
-    User,
     Trophy,
     Brain,
     Calendar,
@@ -23,12 +22,10 @@ import {
     Award,
     TrendingUp,
     Star,
-    Clock,
     Target,
-    Zap,
     Edit,
 } from "lucide-react";
-import { mockUsers, mockEssays, mockContests } from "@/lib/mock-data";
+import { mockUsers, mockEssays } from "@/lib/mock-data";
 
 export default function ProfilePage() {
     const [user] = useState(mockUsers[0]); // Mock current user
@@ -37,9 +34,9 @@ export default function ProfilePage() {
     );
 
     const totalSubmissions = userEssays.length;
-    const averageScore =
-        userEssays.reduce((sum, essay) => sum + (essay.aiScore || 0), 0) /
-        totalSubmissions;
+    // const averageScore =
+    //     userEssays.reduce((sum, essay) => sum + (essay.aiScore || 0), 0) /
+    //     totalSubmissions;
     const highestScore = Math.max(
         ...userEssays.map((essay) => essay.aiScore || 0)
     );

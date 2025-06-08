@@ -25,8 +25,15 @@ import {
     Star,
     Medal,
     Crown,
+    Loader2,
 } from "lucide-react";
-import { mockContests, mockUsers, mockEssays } from "@/lib/mock-data";
+import { mockUsers, mockEssays } from "@/lib/mock-data";
+import {
+    getContestStatus,
+    getStatusColor,
+    getStatusText,
+} from "@/lib/contest-utils";
+import { useGetOneContest } from "@/hooks/useGetOneContest";
 
 interface ContestDetailPageProps {
     contestId: string;
@@ -35,59 +42,56 @@ interface ContestDetailPageProps {
 export default function ContestDetailPage({
     contestId,
 }: ContestDetailPageProps) {
-    const contest = mockContests.find((c) => c.id === contestId);
     const [activeTab, setActiveTab] = useState("overview");
 
-    if (!contest) {
+    // 使用 useGetOneContest hook 获取比赛详情
+    const {
+        data: contest,
+        isPending,
+        error,
+        refetch,
+    } = useGetOneContest({ contestId });
+    const submissions = mockEssays.filter((e) => e.contestId === contestId);
+
+    // 加载状态
+    if (isPending) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-blue-950 flex items-center justify-center">
                 <div className="text-center">
-                    <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                    <h1 className="text-2xl font-bold mb-2">比赛不存在</h1>
-                    <p className="text-muted-foreground mb-4">
-                        抱歉，找不到您要查看的比赛
-                    </p>
-                    <Link href="/contests">
-                        <Button>
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            返回比赛列表
-                        </Button>
-                    </Link>
+                    <Loader2 className="w-16 h-16 text-blue-500 mx-auto mb-4 animate-spin" />
+                    <h3 className="text-lg font-semibold mb-2">加载中...</h3>
+                    <p className="text-muted-foreground">正在获取比赛详情</p>
                 </div>
             </div>
         );
     }
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "active":
-                return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
-            case "upcoming":
-                return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
-            case "ended":
-                return "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300";
-            default:
-                return "bg-gray-100 text-gray-700";
-        }
-    };
+    // 错误状态或比赛不存在
+    if (error || !contest) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-blue-950 flex items-center justify-center">
+                <div className="text-center">
+                    <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">比赛不存在</h3>
+                    <p className="text-muted-foreground mb-4">
+                        您查看的比赛可能已被删除或不存在
+                    </p>
+                    <div className="space-x-2">
+                        <Button onClick={() => refetch()} variant="outline">
+                            重试
+                        </Button>
+                        <Link href="/contests">
+                            <Button>返回比赛列表</Button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case "active":
-                return "进行中";
-            case "upcoming":
-                return "即将开始";
-            case "ended":
-                return "已结束";
-            default:
-                return "未知";
-        }
-    };
+    const currentStatus = getContestStatus(contest);
 
     // Mock data for demonstration
-    const submissions = mockEssays.filter(
-        (essay) => essay.contestId === contestId
-    );
     const topSubmissions = submissions
         .filter((essay) => essay.aiScore !== undefined)
         .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
@@ -115,17 +119,17 @@ export default function ContestDetailPage({
                             <div className="flex items-center gap-3 mb-4">
                                 <Badge
                                     variant="secondary"
-                                    className={getStatusColor(contest.status)}
+                                    className={getStatusColor(currentStatus)}
                                 >
                                     <Clock className="w-3 h-3 mr-1" />
-                                    {getStatusText(contest.status)}
+                                    {getStatusText(currentStatus)}
                                 </Badge>
                                 <Badge
                                     variant="outline"
                                     className="bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 border-orange-200"
                                 >
                                     <Award className="w-3 h-3 mr-1" />
-                                    {contest.reward}
+                                    {Number(contest.reward) / 10 ** 18} MON
                                 </Badge>
                             </div>
                             <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
@@ -136,7 +140,7 @@ export default function ContestDetailPage({
                             </p>
                         </div>
 
-                        {contest.status === "active" && (
+                        {currentStatus === "active" && (
                             <Link href="/submit">
                                 <Button
                                     size="lg"

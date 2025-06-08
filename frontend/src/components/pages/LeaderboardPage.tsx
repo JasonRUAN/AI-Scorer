@@ -19,7 +19,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Trophy,
     Medal,
@@ -254,7 +253,7 @@ export default function LeaderboardPage() {
                                     <div className="space-y-4">
                                         {filteredRankings
                                             .slice(0, 3)
-                                            .map((ranking, index) => (
+                                            .map((ranking) => (
                                                 <div
                                                     key={ranking.essayId}
                                                     className={`relative p-4 rounded-lg ${

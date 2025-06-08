@@ -1,5 +1,10 @@
 import ContestDetailPage from "@/components/pages/ContestDetailPage";
 
-export default function ContestDetail({ params }: { params: { id: string } }) {
-    return <ContestDetailPage contestId={params.id} />;
+export default async function ContestDetail({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
+    return <ContestDetailPage contestId={id} />;
 }

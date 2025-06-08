@@ -26,10 +26,18 @@ import {
     Target,
 } from "lucide-react";
 import { mockContests } from "@/lib/mock-data";
+import { getContestStatus } from "@/lib/contest-utils";
+import { useGetAllContests } from "@/hooks/useGetAllContests";
 
 export default function HomePage() {
-    const activeContests = mockContests.filter(
-        (contest) => contest.status === "active"
+    // 获取真实比赛数据
+    const { data: contests = [] } = useGetAllContests();
+
+    // 如果没有真实数据，使用模拟数据作为后备
+    const contestsToUse = contests.length > 0 ? contests : mockContests;
+
+    const activeContests = contestsToUse.filter(
+        (contest) => getContestStatus(contest) === "active"
     );
     const stats = [
         {

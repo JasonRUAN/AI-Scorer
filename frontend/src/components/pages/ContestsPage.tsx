@@ -35,14 +35,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Search,
     Filter,
-    Clock,
     Users,
     Calendar,
     Trophy,
     Target,
     Plus,
     Award,
-    CheckCircle,
     AlertCircle,
     Loader2,
 } from "lucide-react";
@@ -50,6 +48,12 @@ import { Contest } from "@/types";
 import { toast } from "sonner";
 import { useCreateContest } from "@/mutations/create_contest";
 import { useGetAllContests } from "@/hooks/useGetAllContests";
+import {
+    getContestStatus,
+    getStatusColor,
+    getStatusText,
+    getStatusIcon,
+} from "@/lib/contest-utils";
 
 export default function ContestsPage() {
     const [searchTerm, setSearchTerm] = useState("");
@@ -186,7 +190,8 @@ export default function ContestsPage() {
                 .toLowerCase()
                 .includes(searchTerm.toLowerCase());
         const matchesStatus =
-            filterStatus === "all" || contest.status === filterStatus;
+            filterStatus === "all" ||
+            getContestStatus(contest) === filterStatus;
         return matchesSearch && matchesStatus;
     });
 
@@ -209,42 +214,15 @@ export default function ContestsPage() {
         }
     });
 
-    const getStatusIcon = (status: Contest["status"]) => {
-        switch (status) {
-            case "active":
-                return <Clock className="w-3 h-3" />;
-            case "upcoming":
-                return <AlertCircle className="w-3 h-3" />;
-            case "ended":
-                return <CheckCircle className="w-3 h-3" />;
-        }
-    };
-
-    const getStatusColor = (status: Contest["status"]) => {
-        switch (status) {
-            case "active":
-                return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
-            case "upcoming":
-                return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
-            case "ended":
-                return "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300";
-        }
-    };
-
-    const getStatusText = (status: Contest["status"]) => {
-        switch (status) {
-            case "active":
-                return "进行中";
-            case "upcoming":
-                return "即将开始";
-            case "ended":
-                return "已结束";
-        }
-    };
-
-    const activeContests = contests.filter((c) => c.status === "active");
-    const upcomingContests = contests.filter((c) => c.status === "upcoming");
-    const endedContests = contests.filter((c) => c.status === "ended");
+    const activeContests = contests.filter(
+        (c) => getContestStatus(c) === "active"
+    );
+    const upcomingContests = contests.filter(
+        (c) => getContestStatus(c) === "upcoming"
+    );
+    const endedContests = contests.filter(
+        (c) => getContestStatus(c) === "ended"
+    );
 
     function ContestGrid({ contests }: { contests: Contest[] }) {
         if (contests.length === 0) {
@@ -272,12 +250,21 @@ export default function ContestsPage() {
                                     <Badge
                                         variant="secondary"
                                         className={getStatusColor(
-                                            contest.status
+                                            getContestStatus(contest)
                                         )}
                                     >
-                                        {getStatusIcon(contest.status)}
+                                        {(() => {
+                                            const IconComponent = getStatusIcon(
+                                                getContestStatus(contest)
+                                            );
+                                            return (
+                                                <IconComponent className="w-3 h-3" />
+                                            );
+                                        })()}
                                         <span className="ml-1">
-                                            {getStatusText(contest.status)}
+                                            {getStatusText(
+                                                getContestStatus(contest)
+                                            )}
                                         </span>
                                     </Badge>
                                     <Badge
@@ -331,18 +318,22 @@ export default function ContestsPage() {
                                         <Button
                                             className="w-full"
                                             variant={
-                                                contest.status === "active"
+                                                getContestStatus(contest) ===
+                                                "active"
                                                     ? "default"
                                                     : "outline"
                                             }
                                             disabled={
-                                                contest.status === "ended"
+                                                getContestStatus(contest) ===
+                                                "ended"
                                             }
                                         >
                                             <Target className="w-4 h-4 mr-2" />
-                                            {contest.status === "active"
+                                            {getContestStatus(contest) ===
+                                            "active"
                                                 ? "参与比赛"
-                                                : contest.status === "upcoming"
+                                                : getContestStatus(contest) ===
+                                                  "upcoming"
                                                 ? "查看详情"
                                                 : "查看结果"}
                                         </Button>
