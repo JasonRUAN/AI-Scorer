@@ -27,13 +27,13 @@ import {
     Crown,
     Loader2,
 } from "lucide-react";
-import { mockUsers, mockEssays } from "@/lib/mock-data";
 import {
     getContestStatus,
     getStatusColor,
     getStatusText,
 } from "@/lib/contest-utils";
 import { useGetOneContest } from "@/hooks/useGetOneContest";
+import { useGetContestEssays } from "@/hooks/useGetContestEssays";
 
 interface ContestDetailPageProps {
     contestId: string;
@@ -51,16 +51,24 @@ export default function ContestDetailPage({
         error,
         refetch,
     } = useGetOneContest({ contestId });
-    const submissions = mockEssays.filter((e) => e.contestId === contestId);
+
+    // 使用 useGetContestEssays hook 获取比赛作品
+    const {
+        data: submissions = [],
+        isPending: isLoadingEssays,
+        error: essaysError,
+    } = useGetContestEssays({ contestId });
 
     // 加载状态
-    if (isPending) {
+    if (isPending || isLoadingEssays) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-blue-950 flex items-center justify-center">
                 <div className="text-center">
                     <Loader2 className="w-16 h-16 text-blue-500 mx-auto mb-4 animate-spin" />
                     <h3 className="text-lg font-semibold mb-2">加载中...</h3>
-                    <p className="text-muted-foreground">正在获取比赛详情</p>
+                    <p className="text-muted-foreground">
+                        {isPending ? "正在获取比赛详情" : "正在获取作品数据"}
+                    </p>
                 </div>
             </div>
         );
@@ -72,9 +80,13 @@ export default function ContestDetailPage({
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-blue-950 flex items-center justify-center">
                 <div className="text-center">
                     <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">比赛不存在</h3>
+                    <h3 className="text-lg font-semibold mb-2">
+                        {essaysError ? "加载作品失败" : "比赛不存在"}
+                    </h3>
                     <p className="text-muted-foreground mb-4">
-                        您查看的比赛可能已被删除或不存在
+                        {essaysError
+                            ? "无法获取比赛作品数据"
+                            : "您查看的比赛可能已被删除或不存在"}
                     </p>
                     <div className="space-x-2">
                         <Button onClick={() => refetch()} variant="outline">
@@ -318,11 +330,6 @@ export default function ContestDetailPage({
                                     <div className="space-y-4">
                                         {topSubmissions.map(
                                             (submission, index) => {
-                                                const author = mockUsers.find(
-                                                    (u) =>
-                                                        u.address ===
-                                                        submission.authorAddress
-                                                );
                                                 return (
                                                     <div
                                                         key={submission.id}
@@ -353,7 +360,7 @@ export default function ContestDetailPage({
                                                                 <p className="text-sm text-muted-foreground">
                                                                     作者:{" "}
                                                                     {
-                                                                        author?.name
+                                                                        submission.authorAddress
                                                                     }
                                                                 </p>
                                                             </div>
@@ -383,11 +390,6 @@ export default function ContestDetailPage({
                         <TabsContent value="submissions" className="space-y-6">
                             <div className="grid md:grid-cols-2 gap-6">
                                 {submissions.map((submission) => {
-                                    const author = mockUsers.find(
-                                        (u) =>
-                                            u.address ===
-                                            submission.authorAddress
-                                    );
                                     return (
                                         <Card
                                             key={submission.id}
@@ -410,7 +412,8 @@ export default function ContestDetailPage({
                                                     </Badge>
                                                 </div>
                                                 <CardDescription>
-                                                    作者: {author?.name} •{" "}
+                                                    作者:{" "}
+                                                    {submission.authorAddress} •{" "}
                                                     {new Date(
                                                         submission.submittedAt
                                                     ).toLocaleDateString()}

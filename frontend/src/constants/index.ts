@@ -1,5 +1,6 @@
 export enum QueryKey {
     GetMultipleContestsQueryKey = "getMultipleContests",
+    GetContestEssaysQueryKey = "getContestEssays",
 }
 
 export const CONSTANTS = {
