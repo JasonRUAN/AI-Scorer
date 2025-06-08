@@ -108,21 +108,25 @@ export default function HomePage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                         >
-                            <Button
-                                size="lg"
-                                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3"
-                            >
-                                <Sparkles className="w-5 h-5 mr-2" />
-                                开始创作
-                            </Button>
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="px-8 py-3"
-                            >
-                                <Trophy className="w-5 h-5 mr-2" />
-                                查看比赛
-                            </Button>
+                            <Link href="/submit">
+                                <Button
+                                    size="lg"
+                                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3"
+                                >
+                                    <Sparkles className="w-5 h-5 mr-2" />
+                                    开始创作
+                                </Button>
+                            </Link>
+                            <Link href="/contests">
+                                <Button
+                                    size="lg"
+                                    variant="outline"
+                                    className="px-8 py-3"
+                                >
+                                    <Trophy className="w-5 h-5 mr-2" />
+                                    查看比赛
+                                </Button>
+                            </Link>
                         </motion.div>
                     </div>
                 </div>
@@ -330,14 +334,16 @@ export default function HomePage() {
                             加入我们的AI作文评分平台，让您的每一篇作品都能得到专业的评价和丰厚的奖励。
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Button
-                                size="lg"
-                                variant="secondary"
-                                className="px-8 py-3"
-                            >
-                                <Sparkles className="w-5 h-5 mr-2" />
-                                立即开始创作
-                            </Button>
+                            <Link href="/submit">
+                                <Button
+                                    size="lg"
+                                    variant="secondary"
+                                    className="px-8 py-3"
+                                >
+                                    <Sparkles className="w-5 h-5 mr-2" />
+                                    立即开始创作
+                                </Button>
+                            </Link>
                             <Button
                                 size="lg"
                                 variant="outline"
