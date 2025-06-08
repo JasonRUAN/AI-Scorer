@@ -1,0 +1,14 @@
+# Ignore files
+node_modules/
+dist/
+
+# Ignore environment variables
+.env
+
+# Ignore files in the .vscode directory
+.vscode/
+
+# Ignore shell scripts
+#cmd.sh
+
+.DS_Store
