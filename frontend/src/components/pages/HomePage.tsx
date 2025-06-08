@@ -52,7 +52,7 @@ export default function HomePage() {
         },
         {
             label: "奖励发放",
-            value: "245 SUI",
+            value: "245 MON",
             icon: Award,
             color: "from-orange-500 to-red-500",
         },

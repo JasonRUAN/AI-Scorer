@@ -275,7 +275,7 @@ export default function ContestsPage() {
                                                     reward: e.target.value,
                                                 })
                                             }
-                                            placeholder="100 SUI"
+                                            placeholder="100 MON"
                                         />
                                     </div>
                                 </div>

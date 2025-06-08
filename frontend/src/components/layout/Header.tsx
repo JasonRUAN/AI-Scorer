@@ -21,6 +21,7 @@ import {
     User,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ConnectKitButton } from "connectkit";
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -34,11 +35,6 @@ export default function Header() {
         { name: "排行榜", href: "/leaderboard", icon: BarChart3 },
         { name: "个人中心", href: "/profile", icon: User },
     ];
-
-    const connectWallet = async () => {
-        // Mock wallet connection
-        setIsWalletConnected(true);
-    };
 
     return (
         <motion.header
@@ -100,13 +96,7 @@ export default function Header() {
                                 </span>
                             </motion.div>
                         ) : (
-                            <Button
-                                onClick={connectWallet}
-                                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                            >
-                                <Wallet className="w-4 h-4 mr-2" />
-                                连接钱包
-                            </Button>
+                            <ConnectKitButton />
                         )}
                     </div>
 
@@ -158,13 +148,7 @@ export default function Header() {
                                         </span>
                                     </div>
                                 ) : (
-                                    <Button
-                                        onClick={connectWallet}
-                                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                                    >
-                                        <Wallet className="w-4 h-4 mr-2" />
-                                        连接钱包
-                                    </Button>
+                                    <ConnectKitButton />
                                 )}
                             </div>
                         </div>
