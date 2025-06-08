@@ -133,7 +133,7 @@ contract AIScorer is Ownable {
         require(bytes(_title).length > 0, "Title cannot be empty");
         require(bytes(_contentHash).length > 0, "Content hash cannot be empty");
 
-        require(_score <= 60, "Score must be between 0 and 60");
+        require(_score <= 100, "Score must be between 0 and 100");
 
         // 检查用户是否已经在此比赛中提交过文章
         uint256[] memory userEssayIds = userProfiles[msg.sender].essayIds;
