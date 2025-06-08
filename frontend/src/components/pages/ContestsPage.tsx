@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
     SelectContent,
@@ -20,6 +22,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Search,
@@ -36,11 +47,52 @@ import {
 } from "lucide-react";
 import { mockContests } from "@/lib/mock-data";
 import { Contest } from "@/types";
+import { toast } from "sonner";
 
 export default function ContestsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState("deadline");
     const [filterStatus, setFilterStatus] = useState("all");
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+    // 创建比赛表单状态
+    const [contestForm, setContestForm] = useState({
+        title: "",
+        description: "",
+        prompt: "",
+        maxWords: "",
+        reward: "",
+        deadline: "",
+    });
+
+    const handleCreateContest = () => {
+        // 验证表单
+        if (
+            !contestForm.title ||
+            !contestForm.description ||
+            !contestForm.prompt ||
+            !contestForm.maxWords ||
+            !contestForm.reward ||
+            !contestForm.deadline
+        ) {
+            toast.error("请填写所有必填字段");
+            return;
+        }
+
+        // 这里可以添加实际的创建比赛逻辑
+        toast.success("比赛创建成功！");
+        setIsCreateDialogOpen(false);
+
+        // 重置表单
+        setContestForm({
+            title: "",
+            description: "",
+            prompt: "",
+            maxWords: "",
+            reward: "",
+            deadline: "",
+        });
+    };
 
     const filteredContests = mockContests.filter((contest) => {
         const matchesSearch =
@@ -128,10 +180,133 @@ export default function ContestsPage() {
                         发挥您的创作才能，参与我们的AI评分比赛，赢取丰厚奖励
                     </p>
 
-                    <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
-                        <Plus className="w-4 h-4 mr-2" />
-                        创建比赛
-                    </Button>
+                    <Dialog
+                        open={isCreateDialogOpen}
+                        onOpenChange={setIsCreateDialogOpen}
+                    >
+                        <DialogTrigger asChild>
+                            <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+                                <Plus className="w-4 h-4 mr-2" />
+                                创建比赛
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                                <DialogTitle>创建新比赛</DialogTitle>
+                                <DialogDescription>
+                                    填写比赛信息，创建一个新的作文比赛
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="title">比赛标题 *</Label>
+                                    <Input
+                                        id="title"
+                                        value={contestForm.title}
+                                        onChange={(e) =>
+                                            setContestForm({
+                                                ...contestForm,
+                                                title: e.target.value,
+                                            })
+                                        }
+                                        placeholder="请输入比赛标题"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="description">
+                                        比赛描述 *
+                                    </Label>
+                                    <Textarea
+                                        id="description"
+                                        value={contestForm.description}
+                                        onChange={(e) =>
+                                            setContestForm({
+                                                ...contestForm,
+                                                description: e.target.value,
+                                            })
+                                        }
+                                        placeholder="请输入比赛描述"
+                                        className="min-h-[80px]"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="prompt">作文主题 *</Label>
+                                    <Textarea
+                                        id="prompt"
+                                        value={contestForm.prompt}
+                                        onChange={(e) =>
+                                            setContestForm({
+                                                ...contestForm,
+                                                prompt: e.target.value,
+                                            })
+                                        }
+                                        placeholder="请输入详细的作文题目和要求"
+                                        className="min-h-[100px]"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="maxWords">
+                                            字数限制 *
+                                        </Label>
+                                        <Input
+                                            id="maxWords"
+                                            type="number"
+                                            value={contestForm.maxWords}
+                                            onChange={(e) =>
+                                                setContestForm({
+                                                    ...contestForm,
+                                                    maxWords: e.target.value,
+                                                })
+                                            }
+                                            placeholder="1000"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="reward">
+                                            奖励金额 *
+                                        </Label>
+                                        <Input
+                                            id="reward"
+                                            value={contestForm.reward}
+                                            onChange={(e) =>
+                                                setContestForm({
+                                                    ...contestForm,
+                                                    reward: e.target.value,
+                                                })
+                                            }
+                                            placeholder="100 SUI"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="deadline">截止时间 *</Label>
+                                    <Input
+                                        id="deadline"
+                                        type="datetime-local"
+                                        value={contestForm.deadline}
+                                        onChange={(e) =>
+                                            setContestForm({
+                                                ...contestForm,
+                                                deadline: e.target.value,
+                                            })
+                                        }
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsCreateDialogOpen(false)}
+                                >
+                                    取消
+                                </Button>
+                                <Button onClick={handleCreateContest}>
+                                    创建比赛
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </motion.div>
 
                 {/* Search and Filter */}
