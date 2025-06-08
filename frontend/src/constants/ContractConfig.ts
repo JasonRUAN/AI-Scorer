@@ -1,5 +1,5 @@
 export const aiScorerContractConfig = {
-    address: "0x383bedCBA3f9BdDB7C5c8f4CE0346AE4e0bB9923",
+    address: "0xE9c0C60462C84977e0Df78140ce1943749e5c716",
     abi: [
         { type: "constructor", inputs: [], stateMutability: "nonpayable" },
         {
