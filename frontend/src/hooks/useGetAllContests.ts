@@ -6,8 +6,10 @@ export function useGetAllContests() {
     const { data: allContestIds } = useReadContract({
         address: aiScorerContractConfig.address as `0x${string}`,
         abi: aiScorerContractConfig.abi,
-        functionName: "allContestIds",
+        functionName: "getAllContests",
     });
+
+    console.log(">>>", allContestIds);
 
     // 将bigint转换为string数组，添加类型检查
     const contestIdsAsStrings =

@@ -46,16 +46,21 @@ import {
     AlertCircle,
     Loader2,
 } from "lucide-react";
-import { mockContests } from "@/lib/mock-data";
 import { Contest } from "@/types";
 import { toast } from "sonner";
 import { useCreateContest } from "@/mutations/create_contest";
+import { useGetAllContests } from "@/hooks/useGetAllContests";
 
 export default function ContestsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState("deadline");
     const [filterStatus, setFilterStatus] = useState("all");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+    // 获取所有比赛数据
+    const { data: contests = [], isLoading, error } = useGetAllContests();
+
+    console.log(">>>", contests);
 
     // 创建比赛的 mutation
     const createContestMutation = useCreateContest();
@@ -120,7 +125,7 @@ export default function ContestsPage() {
                 endTime: Math.floor(endTime / 1000), // 转换为秒时间戳
                 deadline: Math.floor(deadline / 1000), // 转换为秒时间戳
                 maxWords: parseInt(contestForm.maxWords),
-                reward: parseFloat(contestForm.reward), // 以 ETH 为单位
+                reward: parseFloat(contestForm.reward), // 以 MON 为单位
             };
 
             // 调用创建比赛的 mutation
@@ -147,7 +152,34 @@ export default function ContestsPage() {
         }
     };
 
-    const filteredContests = mockContests.filter((contest) => {
+    // 如果正在加载数据，显示加载状态
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-blue-950 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                    <p className="text-muted-foreground">正在加载比赛数据...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // 如果加载失败，显示错误状态
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-blue-950 flex items-center justify-center">
+                <div className="text-center">
+                    <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-4" />
+                    <p className="text-red-500 mb-4">加载比赛数据失败</p>
+                    <Button onClick={() => window.location.reload()}>
+                        重试
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    const filteredContests = contests.filter((contest) => {
         const matchesSearch =
             contest.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             contest.description
@@ -210,11 +242,119 @@ export default function ContestsPage() {
         }
     };
 
-    const activeContests = mockContests.filter((c) => c.status === "active");
-    const upcomingContests = mockContests.filter(
-        (c) => c.status === "upcoming"
-    );
-    const endedContests = mockContests.filter((c) => c.status === "ended");
+    const activeContests = contests.filter((c) => c.status === "active");
+    const upcomingContests = contests.filter((c) => c.status === "upcoming");
+    const endedContests = contests.filter((c) => c.status === "ended");
+
+    function ContestGrid({ contests }: { contests: Contest[] }) {
+        if (contests.length === 0) {
+            return (
+                <div className="text-center py-12">
+                    <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">暂无比赛</h3>
+                    <p className="text-muted-foreground">请稍后再来查看</p>
+                </div>
+            );
+        }
+
+        return (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {contests.map((contest, index) => (
+                    <motion.div
+                        key={contest.id}
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                        <Card className="h-full hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-background to-muted/30">
+                            <CardHeader className="space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <Badge
+                                        variant="secondary"
+                                        className={getStatusColor(
+                                            contest.status
+                                        )}
+                                    >
+                                        {getStatusIcon(contest.status)}
+                                        <span className="ml-1">
+                                            {getStatusText(contest.status)}
+                                        </span>
+                                    </Badge>
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 border-orange-200"
+                                    >
+                                        <Award className="w-3 h-3 mr-1" />
+                                        {Number(contest.reward) / 10 ** 18} MON
+                                    </Badge>
+                                </div>
+
+                                <div>
+                                    <CardTitle className="text-xl leading-tight mb-2">
+                                        {contest.title}
+                                    </CardTitle>
+                                    <CardDescription className="line-clamp-3 text-base">
+                                        {contest.description}
+                                    </CardDescription>
+                                </div>
+                            </CardHeader>
+
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                                    <div className="flex items-center">
+                                        <Users className="w-4 h-4 mr-2" />
+                                        <span>
+                                            {contest.participantCount} 参与者
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Calendar className="w-4 h-4 mr-2" />
+                                        <span>
+                                            {new Date(
+                                                contest.deadline
+                                            ).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="bg-muted/50 rounded-lg p-3">
+                                    <div className="text-sm text-muted-foreground mb-1">
+                                        字数要求
+                                    </div>
+                                    <div className="font-medium">
+                                        {contest.maxWords} 字以内
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Link href={`/contests/${contest.id}`}>
+                                        <Button
+                                            className="w-full"
+                                            variant={
+                                                contest.status === "active"
+                                                    ? "default"
+                                                    : "outline"
+                                            }
+                                            disabled={
+                                                contest.status === "ended"
+                                            }
+                                        >
+                                            <Target className="w-4 h-4 mr-2" />
+                                            {contest.status === "active"
+                                                ? "参与比赛"
+                                                : contest.status === "upcoming"
+                                                ? "查看详情"
+                                                : "查看结果"}
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                ))}
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-blue-950">
@@ -477,7 +617,7 @@ export default function ContestsPage() {
                     <Tabs defaultValue="all" className="space-y-6">
                         <TabsList className="grid w-full grid-cols-4">
                             <TabsTrigger value="all">
-                                全部 ({mockContests.length})
+                                全部 ({contests.length})
                             </TabsTrigger>
                             <TabsTrigger value="active">
                                 进行中 ({activeContests.length})
@@ -510,114 +650,4 @@ export default function ContestsPage() {
             </div>
         </div>
     );
-
-    function ContestGrid({ contests }: { contests: Contest[] }) {
-        if (contests.length === 0) {
-            return (
-                <div className="text-center py-12">
-                    <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">暂无比赛</h3>
-                    <p className="text-muted-foreground">请稍后再来查看</p>
-                </div>
-            );
-        }
-
-        return (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {contests.map((contest, index) => (
-                    <motion.div
-                        key={contest.id}
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                    >
-                        <Card className="h-full hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-background to-muted/30">
-                            <CardHeader className="space-y-4">
-                                <div className="flex justify-between items-start">
-                                    <Badge
-                                        variant="secondary"
-                                        className={getStatusColor(
-                                            contest.status
-                                        )}
-                                    >
-                                        {getStatusIcon(contest.status)}
-                                        <span className="ml-1">
-                                            {getStatusText(contest.status)}
-                                        </span>
-                                    </Badge>
-                                    <Badge
-                                        variant="outline"
-                                        className="bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 border-orange-200"
-                                    >
-                                        <Award className="w-3 h-3 mr-1" />
-                                        {contest.reward}
-                                    </Badge>
-                                </div>
-
-                                <div>
-                                    <CardTitle className="text-xl leading-tight mb-2">
-                                        {contest.title}
-                                    </CardTitle>
-                                    <CardDescription className="line-clamp-3 text-base">
-                                        {contest.description}
-                                    </CardDescription>
-                                </div>
-                            </CardHeader>
-
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                                    <div className="flex items-center">
-                                        <Users className="w-4 h-4 mr-2" />
-                                        <span>
-                                            {contest.participantCount} 参与者
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <Calendar className="w-4 h-4 mr-2" />
-                                        <span>
-                                            {new Date(
-                                                contest.deadline
-                                            ).toLocaleDateString()}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="bg-muted/50 rounded-lg p-3">
-                                    <div className="text-sm text-muted-foreground mb-1">
-                                        字数要求
-                                    </div>
-                                    <div className="font-medium">
-                                        {contest.maxWords} 字以内
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Link href={`/contests/${contest.id}`}>
-                                        <Button
-                                            className="w-full"
-                                            variant={
-                                                contest.status === "active"
-                                                    ? "default"
-                                                    : "outline"
-                                            }
-                                            disabled={
-                                                contest.status === "ended"
-                                            }
-                                        >
-                                            <Target className="w-4 h-4 mr-2" />
-                                            {contest.status === "active"
-                                                ? "参与比赛"
-                                                : contest.status === "upcoming"
-                                                ? "查看详情"
-                                                : "查看结果"}
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                ))}
-            </div>
-        );
-    }
 }
